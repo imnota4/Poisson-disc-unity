@@ -15,3 +15,5 @@ The primary purpose of this algorithm when designing it is as a prerequisite ste
 ## Examples
 ![example1](https://github.com/imnota4/Poisson-disc-unity/assets/4397050/6c181836-4894-47d9-b16f-5a5109dfb5ce)
 ![example2](https://github.com/imnota4/Poisson-disc-unity/assets/4397050/260c51e8-7440-4740-a0c1-e2efb20f69fe)
+
+$~~~~~~~~~~~~~~~~~~~~~~~~~$*A 10x10 grid with 2 unit spacing* $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$*A 10x10 grid with 1 unit spacing*
