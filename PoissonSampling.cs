@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Unity.VisualScripting;
-using Unity.VisualScripting.FullSerializer;
 using System.Runtime.CompilerServices;
 using System.Collections;
 using System.Threading;
 using System;
 using Random = UnityEngine.Random;
+using Geometry;
 
 namespace Algorithms.Poisson
 {
@@ -17,8 +16,8 @@ namespace Algorithms.Poisson
         private float cellSize;
         private int cols;
         private int rows;
-        private List<Vector2> grid;
-        private List<Vector2> active;
+        private List<Point> grid;
+        private List<Point> active;
         private float width;
         private float height;
         private float timeOut;
@@ -27,15 +26,15 @@ namespace Algorithms.Poisson
 
         private void createGrid()
         {
-            grid = new List<Vector2>(); // initialize 1D List that stores point data for an N dimensional grid of points
-            active = new List<Vector2>(); // initialize List of valid points that can be used to generate new points
+            grid = new List<Point>(); // initialize 1D List that stores point data for an N dimensional grid of points
+            active = new List<Point>(); // initialize List of valid points that can be used to generate new points
             cellSize = minDist / Mathf.Sqrt(2); // Determine size of individual grid cells in 2D space
             cols = Mathf.FloorToInt(width / cellSize); // determine amount of columns in the grid
             rows = Mathf.FloorToInt(height / cellSize); // determine the amount of rows in the grid
 
             for (int i = 0; i < cols * rows; i++)
             {
-                grid.Insert(i, new Vector2(-1, -1));  // default value of each cell
+                grid.Insert(i, new Point(-1, -1, 0));  // default value of each cell
             }
         } // functions as intended
 
@@ -55,12 +54,12 @@ namespace Algorithms.Poisson
                 colIndex = Mathf.FloorToInt(seedYPos / cellSize);
             } while (rowIndex + (colIndex * cols) >= grid.Count);
 
-            Vector2 point = new Vector2(seedXPos, seedYPos); // Vector2 object that represents the point in 2D space based on the initially generated coordinates
+            Point point = new Point(seedXPos, seedYPos); // Vector2 object that represents the point in 2D space based on the initially generated coordinates
             grid[rowIndex + (colIndex * cols)] = point;  // saves seed point to dataset based on values generated when converting coordinates into intengers
             active.Add(point); // Save generated seed point to list of currently used points.
         }
 
-        private bool checkAdjacentCells(Vector2 newPoint)
+        private bool checkAdjacentCells(Point newPoint)
         {
             int pointColIndex = Mathf.FloorToInt(newPoint.x / cellSize);
             int pointRowIndex = Mathf.FloorToInt(newPoint.y / cellSize);
@@ -77,9 +76,9 @@ namespace Algorithms.Poisson
                         continue;
                     }
 
-                    Vector2 adjPoint = grid[adjIndex]; // Retreive point adjacent to newly created point
+                    Point adjPoint = grid[adjIndex]; // Retreive point adjacent to newly created point
 
-                    if (adjPoint == new Vector2(-1, -1)) 
+                    if (adjPoint.toVector() == new Vector3(-1, -1, 0)) 
                     {
                         continue;
                     }
@@ -90,7 +89,7 @@ namespace Algorithms.Poisson
 
                     // Checks distance from the newly created point and the point adjacent to it and checks if the new point is within the minimum distance required between points
                     //float distance = Mathf.Sqrt(Mathf.Pow(adjPoint.x - newPoint.x, 2) + Mathf.Pow(adjPoint.y - newPoint.y, 2)); // Pythagorean theorem ftw
-                    float distance = Vector2.Distance(adjPoint, newPoint);
+                    float distance = Vector2.Distance(adjPoint.toVector(), newPoint.toVector());
                     if (distance < minDist)
                     {
                         return false; // invalid point
@@ -102,14 +101,14 @@ namespace Algorithms.Poisson
             return true;
         }
 
-        private bool generatePoint(Vector2 activePoint)
+        private bool generatePoint(Point activePoint)
         {
             for (int i = 0; i < timeOut; i++)
             {
 
                 // create a new random point within a circular region around the selected active point
                 float angle = Random.Range(-2 * Mathf.PI, 2 * Mathf.PI);
-                Vector2 newPoint = new Vector2(activePoint.x + minDist*Mathf.Sin(angle), activePoint.y + minDist*Mathf.Cos(angle));
+                Point newPoint = new Point(activePoint.x + minDist*Mathf.Sin(angle), activePoint.y + minDist*Mathf.Cos(angle));
 
                 if (newPoint.x < 1 || newPoint.y < 1 || newPoint.x > width-1 || newPoint.y > height-1)
                 {
@@ -123,9 +122,6 @@ namespace Algorithms.Poisson
                 {
                     int pointColIndex = Mathf.FloorToInt(newPoint.x / cellSize);
                     int pointRowIndex = Mathf.FloorToInt(newPoint.y / cellSize);
-                    Debug.Log(cellSize);
-                    Debug.Log(pointColIndex + " | " + pointRowIndex * cols);
-                    Debug.Log(grid.Count);
                     grid[pointColIndex + (pointRowIndex * cols)] = newPoint; // save newly generated point to samples List
                     active.Add(newPoint); // add newly generated point to list of active points
                     return true;
@@ -135,13 +131,13 @@ namespace Algorithms.Poisson
             return false;
         }
         
-        private List<Vector2> generatePoints()
+        private List<Point> generatePoints()
         {
 
             while (active.Count > 0)
             {
                 int randIndex = Mathf.FloorToInt(Random.Range(0, active.Count)); // generate a random index from the list of active points and save that point to "pos"
-                Vector2 activePoint = active[randIndex];
+                Point activePoint = active[randIndex];
                 bool stillActive = false;
                 stillActive = generatePoint(activePoint);
                 
@@ -154,7 +150,7 @@ namespace Algorithms.Poisson
             return grid;
         }
 
-        public List<Vector2> Samples(float width, float height, float minDist, float timeOut = 30f) 
+        public List<Point> Samples(float width, float height, float minDist, float timeOut = 30f) 
         {
             this.width = width;
             this.height = height;
